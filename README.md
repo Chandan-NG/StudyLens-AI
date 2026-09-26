@@ -4,6 +4,8 @@ StudyLens AI is a lightweight, local-first educational assistant designed to tur
 
 The application operates entirely on local hardware with zero paid API keys or third-party cloud tracking. It is built with a fast [FastAPI](https://fastapi.tiangolo.com) backend and a responsive Bootstrap 5 Single Page Application frontend (adhering to an Ollama-inspired minimalist design system). For questions requiring external or comparative context, StudyLens AI automatically performs dynamic web research via DuckDuckGo (`ddgs`) and cites sources alongside transcript evidence. All sessions, notes, summaries, and quizzes are automatically stored locally in SQLite (`data/studylens.db`) for seamless resumption.
 
+![StudyLens AI Preview](assets/preview.png)
+
 ---
 
 ## Setup Guide
