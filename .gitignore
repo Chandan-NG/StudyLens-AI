@@ -9,9 +9,6 @@ venv/
 .venv/
 ENV/
 
-# Streamlit
-.streamlit/*
-!.streamlit/config.toml
 
 # SQLite Database & Storage
 data/*.db

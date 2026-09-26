@@ -4,7 +4,7 @@
 
 StudyLens AI is a lightweight, local-first educational assistant designed to turn educational YouTube lectures into structured study material and interactive learning experiences. By simply providing a YouTube video URL, the application extracts the transcript using `youtube-transcript-api` without downloading audio or video files. A local Large Language Model running via [Ollama](https://ollama.com) (such as `qwen2:7b`) processes the lecture content to produce structured executive summaries, 6-section academic study notes, 10-question multiple-choice quizzes with instant scoring and explanations, and a lecture-grounded interactive study chat.
 
-The application operates entirely on local hardware with zero paid API keys or third-party cloud tracking. It is built with a fast [FastAPI](https://fastapi.tiangolo.com) backend, a responsive Bootstrap 5 Single Page Application frontend (adhering to an Ollama-inspired minimalist design system), and an alternate Streamlit interface. For questions requiring external or comparative context, StudyLens AI automatically performs dynamic web research via DuckDuckGo (`ddgs`) and cites sources alongside transcript evidence. All sessions, notes, summaries, and quizzes are automatically stored locally in SQLite (`data/studylens.db`) for seamless resumption.
+The application operates entirely on local hardware with zero paid API keys or third-party cloud tracking. It is built with a fast [FastAPI](https://fastapi.tiangolo.com) backend and a responsive Bootstrap 5 Single Page Application frontend (adhering to an Ollama-inspired minimalist design system). For questions requiring external or comparative context, StudyLens AI automatically performs dynamic web research via DuckDuckGo (`ddgs`) and cites sources alongside transcript evidence. All sessions, notes, summaries, and quizzes are automatically stored locally in SQLite (`data/studylens.db`) for seamless resumption.
 
 ---
 
@@ -50,17 +50,12 @@ The application operates entirely on local hardware with zero paid API keys or t
    ```
 
 ### 3. Running the Application
-- **Option 1: FastAPI + Modern SPA Frontend (Recommended)**:
-  ```bash
-  python -m uvicorn server:app --host 127.0.0.1 --port 8000
-  ```
-  Open your browser at: **[http://127.0.0.1:8000](http://127.0.0.1:8000)**
+Start the application server:
+```bash
+python -m uvicorn server:app --host 127.0.0.1 --port 8000
+```
 
-- **Option 2: Streamlit Interface**:
-  ```bash
-  streamlit run app.py
-  ```
-  Open your browser at: **[http://localhost:8501](http://localhost:8501)**
+Open your browser at: **[http://127.0.0.1:8000](http://127.0.0.1:8000)**
 
 ### 4. Running Tests
 Execute the automated test suite with pytest:
@@ -93,7 +88,7 @@ flowchart TD
     G --> J
     H --> J
     
-    J --> K["Modern Web UI (FastAPI SPA / Streamlit)"]
+    J --> K["Modern Web UI (FastAPI Bootstrap SPA)"]
 ```
 
 ### End-to-End Workflow
