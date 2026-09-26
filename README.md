@@ -74,38 +74,26 @@ pytest tests/ -v
 
 ### Architecture Diagram
 
-```text
-               YouTube Educational URL
-                         │
-                         ▼
-             [services/youtube.py]
-          (Extract & Normalize Captions)
-                         │
-                         ├───► [utils/text_cleaner.py] (Stats & Cleaning)
-                         │
-                         ▼
-             Local Ollama LLM Engine
-                 (e.g., qwen2:7b)
-                         │
-        ┌────────────────┼────────────────┬────────────────┐
-        ▼                ▼                ▼                ▼
-   [summarizer.py]   [notes.py]       [quiz.py]        [chat.py]
-      Summary       6-Section Notes   10-MCQ Quiz     Grounded Chat
-     (Markdown)       (Markdown)       (Pydantic)           │
-                                                            ▼
-                                                  [Optional Web Research]
-                                                    (DuckDuckGo / DDGS)
-                                                            │
-                                                            ▼
-                                                   Synthesized Response
-                                                     + Web Citations
-                         │
-                         ▼
-          Local Storage: SQLite Database
-               (data/studylens.db)
-                         │
-                         ▼
-          Modern Web UI (FastAPI SPA / Streamlit)
+```mermaid
+flowchart TD
+    A["YouTube Educational URL"] --> B["Transcript Extraction (youtube-transcript-api)"]
+    B --> C["Text Normalization & Stats (text_cleaner.py)"]
+    C --> D["Local Ollama LLM Engine (qwen2:7b)"]
+    
+    D --> E["Executive Summary Generator"]
+    D --> F["6-Section Academic Notes Generator"]
+    D --> G["10-Question Quiz Generator (Pydantic Schema)"]
+    D --> H["Grounded Chat Assistant"]
+    
+    H -.->|"External Knowledge"| I["DuckDuckGo Web Research (ddgs)"]
+    I -.-> H
+    
+    E --> J[("Local SQLite Database (studylens.db)")]
+    F --> J
+    G --> J
+    H --> J
+    
+    J --> K["Modern Web UI (FastAPI SPA / Streamlit)"]
 ```
 
 ### End-to-End Workflow
