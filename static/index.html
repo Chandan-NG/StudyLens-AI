@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyLens AI — YouTube Study Assistant</title>
+    <link rel="icon" type="image/png" href="/assets/favicon.png">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Nunito:wght@500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Markdown Parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <!-- Custom Ollama Minimalist Styles -->
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand-header">
+                <span class="brand-icon"><i class="bi bi-mortarboard-fill"></i></span>
+                <span class="brand-title">StudyLens AI</span>
+            </div>
+
+            <nav class="sidebar-nav">
+                <button class="nav-pill-btn active" id="nav-btn-session" onclick="switchNav('session')">
+                    <i class="bi bi-tv"></i>
+                    <span>Study Session</span>
+                </button>
+                <button class="nav-pill-btn" id="nav-btn-history" onclick="switchNav('history')">
+                    <i class="bi bi-clock-history"></i>
+                    <span>Study History</span>
+                </button>
+                <button class="nav-pill-btn" id="nav-btn-settings" onclick="switchNav('settings')">
+                    <i class="bi bi-gear"></i>
+                    <span>Settings</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="model-badge" id="sidebar-model-badge">
+                    <span class="status-dot" id="sidebar-status-dot"></span>
+                    <span id="sidebar-model-name">qwen2:7b</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Workspace View -->
+        <main class="main-content">
+            <div class="reading-column">
+                
+                <!-- VIEW 1: Study Session -->
+                <section id="view-session" class="view-section">
+                    <!-- Hero Header -->
+                    <div class="session-hero">
+                        <div class="hero-icon"><i class="bi bi-mortarboard-fill"></i></div>
+                        <h1>StudyLens AI</h1>
+                        <p>Turn YouTube educational lectures into structured notes, quizzes, and interactive AI study sessions.</p>
+                    </div>
+
+                    <!-- Clean Capsule Search Input Bar -->
+                    <form id="url-search-form" class="capsule-form" onsubmit="handleLoadVideo(event)">
+                        <input 
+                            type="text" 
+                            id="video-url-input" 
+                            class="capsule-input" 
+                            placeholder="Paste YouTube link..." 
+                            autocomplete="off" 
+                            required
+                        >
+                        <button type="submit" id="btn-load-video" class="btn-black-pill">
+                            <span>Study →</span>
+                        </button>
+                    </form>
+
+                    <!-- Active Lecture Status Pill Banner -->
+                    <div id="lecture-banner" class="lecture-badge-banner" style="display: none;">
+                        <span style="font-weight: 500; color: #000000;">
+                            <i class="bi bi-tv" style="margin-right: 6px;"></i> Active Lecture Loaded
+                        </span>
+                        <span id="lecture-stats-text">
+                            <i class="bi bi-journal-text" style="margin-right: 4px;"></i> 0 words &nbsp;·&nbsp; <i class="bi bi-clock-history" style="margin-right: 4px;"></i> ~0 min read
+                        </span>
+                    </div>
+
+                    <!-- 5 Workspace Tabs (Always Visible) -->
+                    <div class="workspace-tabs">
+                        <button class="tab-pill active" id="tab-btn-transcript" onclick="switchTab('transcript')">
+                            <i class="bi bi-journal-text"></i>
+                            <span>Transcript</span>
+                        </button>
+                        <button class="tab-pill" id="tab-btn-summary" onclick="switchTab('summary')">
+                            <i class="bi bi-pencil-square"></i>
+                            <span>Summary</span>
+                        </button>
+                        <button class="tab-pill" id="tab-btn-notes" onclick="switchTab('notes')">
+                            <i class="bi bi-stickies"></i>
+                            <span>Notes</span>
+                        </button>
+                        <button class="tab-pill" id="tab-btn-quiz" onclick="switchTab('quiz')">
+                            <i class="bi bi-ui-checks-grid"></i>
+                            <span>Quiz</span>
+                        </button>
+                        <button class="tab-pill" id="tab-btn-chat" onclick="switchTab('chat')">
+                            <i class="bi bi-chat-dots"></i>
+                            <span>Chat</span>
+                        </button>
+                    </div>
+
+                    <!-- Tab 1: Transcript Explorer -->
+                    <div id="tab-content-transcript" class="tab-panel active">
+                        <div id="transcript-empty-state" class="empty-state">
+                            <div class="empty-icon"><i class="bi bi-journal-text"></i></div>
+                            <h4>Transcript Explorer</h4>
+                            <p>Paste a YouTube video link above and click <strong>Study →</strong> to view synchronized lecture transcripts, timestamps, and search across spoken text.</p>
+                        </div>
+
+                        <div id="transcript-content" style="display: none;" class="transcript-grid">
+                            <div class="video-box">
+                                <h4 style="margin-bottom: 12px;"><i class="bi bi-tv"></i> Video Preview</h4>
+                                <iframe id="youtube-player" src="" frameborder="0" allowfullscreen></iframe>
+                                <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px;" id="video-source-caption"></div>
+                            </div>
+                            <div class="transcript-box">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <h4 style="margin: 0;"><i class="bi bi-journal-text"></i> Transcript Explorer</h4>
+                                    <div class="mode-toggle-group">
+                                        <button class="mode-toggle-btn active" id="mode-btn-continuous" onclick="setTranscriptMode('continuous')">Continuous</button>
+                                        <button class="mode-toggle-btn" id="mode-btn-timestamped" onclick="setTranscriptMode('timestamped')">Timestamps</button>
+                                    </div>
+                                </div>
+                                <input 
+                                    type="text" 
+                                    id="transcript-filter-input" 
+                                    class="transcript-search-bar" 
+                                    placeholder="Search keywords in lecture..."
+                                    oninput="filterTranscript()"
+                                >
+                                <div id="transcript-scrollbox" class="transcript-scrollbox"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: Executive Summary -->
+                    <div id="tab-content-summary" class="tab-panel">
+                        <div id="summary-empty-state" class="empty-state">
+                            <div class="empty-icon"><i class="bi bi-pencil-square"></i></div>
+                            <h4>Executive Summary</h4>
+                            <p id="summary-empty-text">Paste a YouTube video link above to generate comprehensive key takeaways, core concepts, and main arguments.</p>
+                            <button id="btn-gen-summary" class="btn-black-pill" style="margin-top: 16px; display: none;" onclick="generateSummary()">
+                                <span>Generate Summary</span>
+                            </button>
+                        </div>
+                        <div id="summary-content" style="display: none;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
+                                <button class="btn-black-pill" onclick="generateSummary()">
+                                    <span>Regenerate Summary</span>
+                                </button>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="btn-outline-pill" id="btn-copy-summary-md" onclick="copySummary('md')">
+                                        <span>Copy Markdown</span>
+                                    </button>
+                                    <button class="btn-outline-pill" id="btn-copy-summary-txt" onclick="copySummary('txt')">
+                                        <span>Copy Text</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="clean-card">
+                                <div id="summary-markdown" class="markdown-body"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 3: Study Notes -->
+                    <div id="tab-content-notes" class="tab-panel">
+                        <div id="notes-empty-state" class="empty-state">
+                            <div class="empty-icon"><i class="bi bi-stickies"></i></div>
+                            <h4>Structured Study Notes</h4>
+                            <p id="notes-empty-text">Paste a YouTube video link above to generate structured lecture notes, definitions, key takeaways, and glossary.</p>
+                            <button id="btn-gen-notes" class="btn-black-pill" style="margin-top: 16px; display: none;" onclick="generateNotes()">
+                                <span>Generate Notes</span>
+                            </button>
+                        </div>
+                        <div id="notes-content" style="display: none;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
+                                <button class="btn-black-pill" onclick="generateNotes()">
+                                    <span>Regenerate Notes</span>
+                                </button>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="btn-outline-pill" id="btn-copy-notes-md" onclick="copyNotes('md')">
+                                        <span>Copy Markdown</span>
+                                    </button>
+                                    <button class="btn-outline-pill" id="btn-copy-notes-txt" onclick="copyNotes('txt')">
+                                        <span>Copy Text</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="clean-card">
+                                <div id="notes-markdown" class="markdown-body"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 4: Interactive Quiz -->
+                    <div id="tab-content-quiz" class="tab-panel">
+                        <div id="quiz-empty-state" class="empty-state">
+                            <div class="empty-icon"><i class="bi bi-ui-checks-grid"></i></div>
+                            <h4>Comprehension Quiz</h4>
+                            <p id="quiz-empty-text">Paste a YouTube video link above to generate an interactive 10-question multiple-choice quiz with instant scoring and explanations.</p>
+                            <button id="btn-gen-quiz" class="btn-black-pill" style="margin-top: 16px; display: none;" onclick="generateQuiz()">
+                                <span>Generate 10-Question Quiz</span>
+                            </button>
+                        </div>
+                        <div id="quiz-content" style="display: none;">
+                            <div id="quiz-score-banner" class="quiz-score-banner" style="display: none;">
+                                <div>
+                                    <div style="font-size: 18px; font-weight: 700;" id="quiz-score-title">Quiz Completed!</div>
+                                    <div style="font-size: 13px; opacity: 0.9;" id="quiz-score-desc">Review your answers and detailed explanations below.</div>
+                                </div>
+                                <button class="btn-outline-pill" style="background: #ffffff; color: #000000; border: none;" onclick="retakeQuiz()">
+                                    <span>Retake Quiz</span>
+                                </button>
+                            </div>
+                            <div id="quiz-questions-list"></div>
+                            <div style="display: flex; gap: 12px; margin-top: 20px;">
+                                <button id="btn-submit-quiz" class="btn-black-pill" onclick="submitQuiz()">
+                                    <span>Submit Quiz</span>
+                                </button>
+                                <button id="btn-regen-quiz" class="btn-outline-pill" onclick="generateQuiz()">
+                                    <span>Regenerate New Questions</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 5: Chat with Video & Web -->
+                    <div id="tab-content-chat" class="tab-panel">
+                        <div id="chat-empty-state" class="empty-state">
+                            <div class="empty-icon"><i class="bi bi-chat-dots"></i></div>
+                            <h4>Interactive Lecture Chat</h4>
+                            <p>Paste a YouTube video link above to ask questions and receive answers grounded strictly in the lecture transcript and real-time DuckDuckGo research.</p>
+                        </div>
+
+                        <div id="chat-content" class="chat-container" style="display: none;">
+                            <div class="chat-header">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div class="mode-toggle-group">
+                                        <button class="mode-toggle-btn active" id="chat-mode-web" onclick="setChatMode('Video + Web Research')">
+                                            <i class="bi bi-journal-text"></i> Video + Web Research
+                                        </button>
+                                        <button class="mode-toggle-btn" id="chat-mode-video" onclick="setChatMode('Video Only')">
+                                            <i class="bi bi-tv"></i> Video Only
+                                        </button>
+                                    </div>
+                                    <span style="font-size: 12px; color: var(--text-muted);" id="chat-mode-desc">
+                                        Automatic DuckDuckGo research enabled
+                                    </span>
+                                </div>
+                                <button class="btn-outline-pill" style="padding: 4px 12px; font-size: 12px;" onclick="clearChat()">
+                                    <span>Clear Chat</span>
+                                </button>
+                            </div>
+
+                            <div id="chat-messages" class="chat-messages">
+                                <!-- Suggested Prompt Chips -->
+                                <div id="chat-suggestions" class="clean-card" style="background-color: var(--bg-surface); padding: 16px;">
+                                    <div style="font-weight: 600; font-size: 13px; margin-bottom: 8px;">Suggested Questions to Ask:</div>
+                                    <div style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #525252;">
+                                        <span style="cursor: pointer;" onclick="askPreset('What are the main concepts covered in this video?')">• <i>What are the main concepts covered in this video?</i></span>
+                                        <span style="cursor: pointer;" onclick="askPreset('Can you explain the key theory or technique mentioned?')">• <i>Can you explain the key theory or technique mentioned?</i></span>
+                                        <span style="cursor: pointer;" onclick="askPreset('are there any battles in history which took place in the same year in which battle of plassey took place')">• <i>are there any battles in history which took place in the same year in which battle of plassey took place</i></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <form id="chat-input-form" class="chat-input-bar" onsubmit="handleSendChat(event)">
+                                <input 
+                                    type="text" 
+                                    id="chat-user-input" 
+                                    class="chat-input" 
+                                    placeholder="Ask a question about this video..." 
+                                    autocomplete="off"
+                                >
+                                <button type="submit" id="btn-send-chat" class="btn-black-pill" style="padding: 8px 20px;">
+                                    <span>Send</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                </section>
+
+                <!-- VIEW 2: Study History -->
+                <section id="view-history" class="view-section" style="display: none;">
+                    <div style="margin-bottom: 24px;">
+                        <h2><i class="bi bi-clock-history"></i> Study History</h2>
+                        <p style="color: var(--text-muted); font-size: 14px;">Your saved study sessions stored locally in SQLite.</p>
+                    </div>
+                    <div id="history-list"></div>
+                </section>
+
+                <!-- VIEW 3: Settings -->
+                <section id="view-settings" class="view-section" style="display: none;">
+                    <div style="margin-bottom: 24px;">
+                        <h2><i class="bi bi-gear"></i> Settings</h2>
+                        <p style="color: var(--text-muted); font-size: 14px;">Manage AI model parameters and web research preferences.</p>
+                    </div>
+
+                    <div class="clean-card" style="max-width: 600px;">
+                        <div class="form-group">
+                            <label>Ollama Host URL</label>
+                            <input type="text" id="settings-host" class="form-control-pill" value="http://localhost:11434">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Model Name</label>
+                            <select id="settings-model-select" class="form-control-pill" style="display: none;"></select>
+                            <input type="text" id="settings-model-input" class="form-control-pill" value="qwen2:7b">
+                        </div>
+
+                        <div class="form-group" style="display: flex; align-items: center; justify-content: space-between; margin-top: 24px;">
+                            <div>
+                                <div style="font-weight: 600; font-size: 14px;">Enable Web Research by Default</div>
+                                <div style="font-size: 12px; color: var(--text-muted);">Augment chat answers with DuckDuckGo when video transcript is insufficient.</div>
+                            </div>
+                            <input type="checkbox" id="settings-web-default" checked style="width: 20px; height: 20px; accent-color: #000000;">
+                        </div>
+
+                        <div style="margin-top: 28px;">
+                            <button class="btn-black-pill" onclick="saveSettings()">Save Settings</button>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Application Script -->
+    <script src="/static/app.js"></script>
+</body>
+</html>
