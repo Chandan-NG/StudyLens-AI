@@ -278,7 +278,7 @@ def execute_web_research(
         model=model,
         host=host,
         temperature=0.2,
-        max_tokens=700,
+        max_tokens=None,
     )
 
     if result["success"]:
@@ -392,7 +392,7 @@ Source: Current video transcript
         model=model,
         host=host,
         temperature=0.2,
-        max_tokens=700,
+        max_tokens=None,
     )
 
     if not result["success"]:
