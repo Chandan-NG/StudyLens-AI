@@ -89,6 +89,8 @@ def generate_completion(
     options: Dict[str, Any] = {"temperature": temperature}
     if max_tokens:
         options["num_predict"] = max_tokens
+    else:
+        options["num_predict"] = 2048
 
     chat_kwargs: Dict[str, Any] = {
         "model": target_model,
